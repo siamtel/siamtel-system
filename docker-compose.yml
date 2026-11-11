@@ -1,28 +1,42 @@
 services:
   siamtel_web:
-    build:
-      context: .
-      dockerfile: php.dockerfile
+    image: php:8.2-apache
     container_name: siamtel_web
-    restart: unless-stopped
+    restart: "no"
+    working_dir: /var/www/html
     depends_on:
       - siamtel_db
     ports:
       - "${WEB_PORT}:80"
     volumes:
-      - .:/var/www/html
-    develop:
-      watch:
-        - action: sync
-          path: .
-          target: /var/www/html
-          ignore:
-            - vendor/
-            - .git/
-        - action: rebuild
-          path: ./php.dockerfile
-        - action: rebuild
-          path: ./composer.json
+      - ./html/:/var/www/html:Z
+      - ./config-available/:/etc/apache2/conf-avialable:Z
+    command:
+      - sh
+      - -c
+      - |
+        docker-php-ext-install pdo pdo_mysql mysqli && \
+        apt-get update && apt-get install -y \
+        libfreetype-dev \
+        libjpeg62-turbo-dev \
+        libpng-dev \
+        libicu-dev \
+        libbz2-dev \
+        libzip-dev \
+        libldap2-dev \
+        git \
+        unzip \
+        && docker-php-ext-configure gd --with-freetype --with-jpeg \
+        && docker-php-ext-install -j$(nproc) gd intl bz2 zip ldap exif \
+        && apt-get clean \
+        && rm -rf /var/lib/apt/lists/* && \
+        a2enmod rewrite && \
+        sed -ri 's!/var/www/html!/var/www/html/public!g' \
+        /etc/apache2/sites-available/000-default.conf && \
+        cp $$PHP_INI_DIR/php.ini-development $$PHP_INI_DIR/php.ini && \
+        sed -i 's/session.cookie_httponly =/session.cookie_httponly = on/g' \
+        $$PHP_INI_DIR/php.ini && \
+        apache2-foreground
     environment:
       - DB_HOST=siamtel_db
       - DB_NAME=${DB_NAME}
