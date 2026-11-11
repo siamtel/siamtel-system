@@ -8,5 +8,6 @@ nbproject/
 .idea/
 
 # Dependencias o logs si aplica
+vendor/
 logs/
 *.log
