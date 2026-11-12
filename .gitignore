@@ -11,3 +11,4 @@ nbproject/
 vendor/
 logs/
 *.log
+*:Zone.Identifier
