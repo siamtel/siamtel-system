@@ -12,5 +12,10 @@
             "name": ""
         }
     ],
-    "require": {}
+    "require": {},
+    "scripts": {
+        "migrate": "php bin/migrate.php",
+        "seed": "php bin/seed.php",
+        "refresh": "php bin/refresh.php"
+    }
 }
