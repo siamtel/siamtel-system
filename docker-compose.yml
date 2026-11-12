@@ -30,6 +30,8 @@ services:
       - "${DB_PORT}:3306"
     volumes:
       - siamtel_mariadb_data:/var/lib/mysql
+      - ./html/database/migrations/0001_create_initial_schema.sql:/docker-entrypoint-initdb.d/01_schema.sql:ro
+      - ./html/database/seeds/0001_initial_catalogs.sql:/docker-entrypoint-initdb.d/02_seed.sql:ro
 
   siamtel_pma:
     image: phpmyadmin:latest
