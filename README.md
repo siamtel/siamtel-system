@@ -55,35 +55,40 @@ Puedes usar cualquiera de los dos modos de desarrollo:
 
 ## 📁 Estructura del Proyecto
 
-El código fuente sigue un estándar modular organizado por responsabilidades:
+El código fuente sigue un estándar modular organizado por responsabilidades bajo el directorio `html/` (mapeado directamente a `/var/www/html` en el contenedor web):
 
 ```text
 siamtel-system/
-├── app/
-│   ├── Controllers/             # Controladores organizados por módulo (Archivos de Script)
-│   │   └── Auth/
-│   │       └── AuthController.php
-│   ├── Core/                    # Núcleo del framework MVC y clases base
-│   │   ├── Database.php         # Clase abstracta con conexión PDO Singleton
-│   │   ├── Helpers.php          # Funciones globales auxiliares (view, redirect, json)
-│   │   └── Model.php            # Clase abstracta base para todos los modelos
-│   ├── Models/                  # Modelos de negocio y datos
-│   │   ├── Security/            # Modelos de seguridad (Usuario, Roles, etc.)
-│   │   └── System/              # Modelos funcionales (Cliente, etc.)
-│   └── Views/                   # Vistas organizadas por módulo
-│       └── auth/
-│           └── login.php
-├── public/                      # DocumentRoot público accesible por la web
-│   ├── .htaccess                # Reescritura de URLs para el Front Controller
-│   ├── index.php                # Front Controller y Enrutador inteligente
-│   ├── css/                     # Hojas de estilo por módulo (ej: css/auth/login.css)
-│   ├── js/                      # Scripts JavaScript por módulo
-│   └── img/                     # Recursos gráficos e imágenes
+├── config-available/            # Configuraciones adicionales de Apache
+│   └── public-directory.conf    # Directivas de permisos y AllowOverride para /public
+├── html/                        # Raíz de la aplicación web
+│   ├── app/
+│   │   ├── Controllers/         # Controladores del sistema
+│   │   │   ├── FrontController.php # Front Controller (única clase controladora)
+│   │   │   └── AuthController.php  # Controlador de autenticación (archivo de script)
+│   │   ├── Core/                # Núcleo del framework MVC y clases base
+│   │   │   ├── Database.php     # Clase abstracta con conexión PDO Singleton
+│   │   │   ├── Helpers.php      # Funciones globales auxiliares (view, redirect, json)
+│   │   │   └── Model.php        # Clase abstracta base para todos los modelos
+│   │   ├── Models/              # Modelos de negocio y datos
+│   │   │   ├── Security/        # Modelos de seguridad (Usuario, Roles, etc.)
+│   │   │   └── System/          # Modelos funcionales (Cliente, etc.)
+│   │   └── Views/               # Vistas organizadas del sistema
+│   │       ├── errors/
+│   │       │   └── 404.php
+│   │       └── login.php
+│   ├── public/                  # DocumentRoot público accesible por la web
+│   │   ├── .htaccess            # Reescritura de URLs hacia index.php
+│   │   ├── index.php            # Front Controller ligero (punto de entrada)
+│   │   ├── css/                 # Hojas de estilo (ej: css/login.css)
+│   │   ├── js/                  # Scripts JavaScript
+│   │   └── img/                 # Recursos gráficos e imágenes
+│   └── composer.json            # Autoload PSR-4 ("App\\": "app/")
 ├── docker-compose.yml           # Definición de servicios (Web, DB, phpMyAdmin)
-├── php.dockerfile               # Configuración del contenedor PHP 8.2 + Apache
-├── composer.json                # Autoload PSR-4 ("App\\": "app/")
+├── .env                         # Variables de entorno locales
 ├── .envexample                  # Plantilla de variables de entorno
-└── .gitattributes               # Normalización de saltos de línea (LF)
+├── .gitattributes               # Normalización de saltos de línea (LF)
+└── .gitignore                   # Exclusiones de Git (.env, vendor/, etc.)
 ```
 
 ---
@@ -207,7 +212,7 @@ Cuando vayas a conectar datos o formularios:
    }
    ```
 
-3. El enrutador [public/index.php](file:///home/gimz/proyectos/siamtel-system/public/index.php) lo despachará automáticamente cuando visites `/dashboard` o `/modulo/nombre`.
+3. El enrutador [FrontController.php](file:///home/gimz/proyectos/siamtel-system/html/app/Controllers/FrontController.php) (despachado desde [index.php](file:///home/gimz/proyectos/siamtel-system/html/public/index.php)) lo despachará automáticamente cuando visites `/dashboard` o `/modulo/nombre`.
 
 ---
 

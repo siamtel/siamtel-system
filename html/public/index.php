@@ -1,83 +1,59 @@
 <?php
 
-declare(strict_types=1);
+require_once __DIR__ . '/../vendor/autoload.php';
 
-// 1. Constantes globales de ruta y entorno
-define('BASE_PATH', dirname(__DIR__));
+define('DS', DIRECTORY_SEPARATOR);
 
-$protocol = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
+$protocol = isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? 'https://' : 'http://';
+
 $host = $_SERVER['HTTP_HOST'] ?? 'localhost:8080';
-define('BASE_URL', $protocol . '://' . $host);
 
-// 2. Cargar Autoload PSR-4 de Composer
-if (file_exists(BASE_PATH . '/vendor/autoload.php')) {
-    require_once BASE_PATH . '/vendor/autoload.php';
-}
+$scriptName = $_SERVER['SCRIPT_NAME'] ?? '';
 
-// 3. Cargar funciones auxiliares globales (view, redirect, json)
+$basePath = rtrim(dirname($scriptName), '/\\');
+
+define('BASE_URL', rtrim($protocol . $host . $basePath, '/\\') . '/');
+define('BASE_PATH', realpath(__DIR__ . '/..'));
+
+ini_set('display_errors', 1);
+ini_set('display_startup_errors', 1);
+error_reporting(E_ALL);
+
+date_default_timezone_set("America/Caracas");
+
 require_once BASE_PATH . '/app/Core/Helpers.php';
 
-// 4. Inicializar sesión de usuario
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 
-// 5. Procesamiento de ruta limpia
-$requestUri = parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH);
-$path = trim($requestUri, '/');
+use App\Controllers\FrontController;
 
-// Obtener parámetro ?page= o deducirlo de la URL
-$route = $_GET['page'] ?? $path;
-if (empty($route) || $route === 'index.php') {
-    $route = 'login';
-}
+try {
 
-// Limpiar extensión .php si fue ingresada en la barra de direcciones
-$route = preg_replace('/\.php$/', '', $route);
-$segments = explode('/', $route);
-$primary = strtolower($segments[0]);
+    $frontController = new FrontController();
 
-// 6. Enrutamiento a Controladores (Archivos de Script) o Vistas
-switch ($primary) {
-    case 'login':
-    case 'crear-cuenta':
-    case 'auth':
-        require_once BASE_PATH . '/app/Controllers/Auth/AuthController.php';
-        break;
+} catch (Throwable $e) {
+    $isAjax = (!empty($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) == 'xmlhttprequest');
 
-    case 'logout':
-        $_REQUEST['type'] = 'logout';
-        require_once BASE_PATH . '/app/Controllers/Auth/AuthController.php';
-        break;
+    if ($isAjax) {
+        if (ob_get_length()) ob_clean();
+        header('Content-Type: application/json; charset=utf-8');
+        header('HTTP/1.1 500 Internal Server Error');
+        echo json_encode([
+            'resultado' => 500,
+            'mensaje' => 'Error crítico del sistema',
+            'debug' => [
+                'mensaje' => $e->getMessage(),
+                'archivo' => $e->getFile(),
+                'linea' => $e->getLine()
+            ]
+        ]);
+        exit;
+    }
 
-    default:
-        // A. Controlador Modular: app/Controllers/{Modulo}/{Nombre}Controller.php
-        if (count($segments) >= 2) {
-            $module = ucfirst($segments[0]);
-            $controllerName = ucfirst($segments[1]) . 'Controller.php';
-            $modularFile = BASE_PATH . '/app/Controllers/' . $module . '/' . $controllerName;
-
-            if (file_exists($modularFile)) {
-                require_once $modularFile;
-                exit();
-            }
-        }
-
-        // B. Controlador Directo: app/Controllers/{Nombre}Controller.php
-        $directFile = BASE_PATH . '/app/Controllers/' . ucfirst($primary) . 'Controller.php';
-        if (file_exists($directFile)) {
-            require_once $directFile;
-            exit();
-        }
-
-        // C. Vista directa para maquetar UI/UX rápido (app/Views/{ruta}.php)
-        $viewFile = BASE_PATH . '/app/Views/' . $route . '.php';
-        if (file_exists($viewFile)) {
-            require_once $viewFile;
-            exit();
-        }
-
-        // D. Fallback por defecto: Login
-        require_once BASE_PATH . '/app/Controllers/Auth/AuthController.php';
-        break;
+    echo "<h1>Error en la aplicación</h1>";
+    echo "<p><strong>Mensaje:</strong> " . $e->getMessage() . "</p>";
+    echo "<p><strong>Archivo:</strong> " . $e->getFile() . ":" . $e->getLine() . "</p>";
+    echo "<pre>" . $e->getTraceAsString() . "</pre>";
 }

@@ -2,17 +2,8 @@
 
 declare(strict_types=1);
 
-/**
- * Funciones Auxiliares Globales para Vistas y Respuestas
- */
 
 if (!function_exists('view')) {
-    /**
-     * Renderiza una vista y le pasa datos asociativos como variables locales.
-     *
-     * @param string $viewPath Ruta de la vista relativa a app/Views (ej: 'auth/login')
-     * @param array $data Variables que se extraerán en la vista
-     */
     function view(string $viewPath, array $data = []): void
     {
         extract($data);
@@ -38,9 +29,7 @@ if (!function_exists('view')) {
 }
 
 if (!function_exists('redirect')) {
-    /**
-     * Redirige el navegador a una ruta interna o externa.
-     */
+
     function redirect(string $path): void
     {
         $url = (str_starts_with($path, 'http://') || str_starts_with($path, 'https://'))
@@ -53,9 +42,7 @@ if (!function_exists('redirect')) {
 }
 
 if (!function_exists('json')) {
-    /**
-     * Emite una respuesta en formato JSON.
-     */
+   
     function json(array $data, int $statusCode = 200): void
     {
         http_response_code($statusCode);

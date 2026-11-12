@@ -2,30 +2,21 @@
 
 declare(strict_types=1);
 
-/**
- * Controlador de Autenticación y Registro (Script / Procedural)
- *
- * En esta arquitectura los controladores son archivos de script modulares (no clases)
- * que ejecutan la lógica correspondiente apoyados en funciones de responsabilidad única.
- */
 
 use App\Models\Security\Usuario;
 use App\Models\Security\LoginSettings;
 use App\Models\System\Cliente;
 
-// 1. Manejo de sesión
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 
-// 2. Si ya hay usuario autenticado, redirigir según su rol
 if (isset($_SESSION['user'])) {
     $rol = strtoupper(trim($_SESSION['user']['rol'] ?? ''));
     $target = ($rol === 'CLIENTE') ? 'home' : 'dashboard';
     redirect($target);
 }
 
-// 3. Obtener tipo de acción solicitada
 $type = $_REQUEST['type'] ?? 'index';
 
 if ($type === 'index') {
@@ -38,7 +29,6 @@ if ($type === 'index') {
     $currentPage = $_GET['page'] ?? 'login';
     $openRegisterSlide = ($currentPage === 'crear-cuenta');
 
-    // Procesar peticiones POST
     if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $peticion = $_POST['peticion'] ?? 'sesion';
 
@@ -58,8 +48,7 @@ if ($type === 'index') {
         }
     }
 
-    // Renderizar la vista de login
-    view('auth/login', [
+    view('login', [
         'titulo'            => 'Iniciar Sesión - SIAMTEL',
         'siteKey'           => $siteKey,
         'openRegisterSlide' => $openRegisterSlide,
@@ -69,13 +58,6 @@ if ($type === 'index') {
     authLogout();
 }
 
-// ============================================================================
-// Funciones de Responsabilidad Única para Autenticación (Clean Code)
-// ============================================================================
-
-/**
- * Procesa el formulario de inicio de sesión.
- */
 function authProcessLogin(string $siteKey): void
 {
     $recaptcha = $_POST['g-recaptcha-response'] ?? '';
@@ -94,7 +76,6 @@ function authProcessLogin(string $siteKey): void
         redirect('login');
     }
 
-    // Si los modelos aún no están implementados (fase de maquetación UI/UX)
     if (!class_exists(Usuario::class)) {
         $_SESSION['error_login'] = 'Módulo de autenticación en desarrollo (sin conexión activa).';
         redirect('login');
@@ -134,9 +115,6 @@ function authProcessLogin(string $siteKey): void
     redirect('login');
 }
 
-/**
- * Procesa el registro de un nuevo usuario.
- */
 function authProcessRegister(string $siteKey): void
 {
     $clave = $_POST['clave'] ?? '';
@@ -152,13 +130,10 @@ function authProcessRegister(string $siteKey): void
         redirect('crear-cuenta');
     }
 
-    // Transacción de registro cuando los modelos estén listos
     redirect('login');
 }
 
-/**
- * Verificación asíncrona (AJAX) de cédula existente.
- */
+
 function authVerifyCedula(): void
 {
     $particle = $_POST['nacionalidad'] ?? 'V-';
@@ -179,9 +154,7 @@ function authVerifyCedula(): void
     }
 }
 
-/**
- * Cierra la sesión activa del usuario.
- */
+
 function authLogout(): void
 {
     if (session_status() === PHP_SESSION_ACTIVE) {
