@@ -34,7 +34,7 @@ class FrontController
                 $this->url = $page;
             }
 
-            $this->dir = BASE_PATH . '/app/Controllers/';
+            $this->dir = BASE_PATH . '/app/controllers/';
             $this->controller = 'Controller.php';
 
             $this->getURL();
@@ -57,7 +57,7 @@ class FrontController
     private function show404(): void
     {
         http_response_code(404);
-        require_once BASE_PATH . '/app/Views/404.php';
+        require_once BASE_PATH . '/app/views/404.php';
         exit;
     }
 }
