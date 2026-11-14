@@ -1,0 +1,17 @@
+{
+  "name": "siamtel-system",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "dev": "tailwindcss -i ./resources/css/input.css -o ./public/css/app.css --watch",
+    "build": "tailwindcss -i ./resources/css/input.css -o ./public/css/app.css --minify"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "tailwindcss": "^3.4.17"
+  }
+}
+
