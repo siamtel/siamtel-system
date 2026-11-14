@@ -7,6 +7,7 @@
 
 SET FOREIGN_KEY_CHECKS = 0;
 SET NAMES utf8mb4;
+USE `system`;
 
 -- ------------------------------------------------------------------------------
 -- 1. TIPOS DE DOCUMENTO (core.document_type)

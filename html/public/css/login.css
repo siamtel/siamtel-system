@@ -2,11 +2,11 @@
     margin: 0;
     padding: 0;
     box-sizing: border-box;
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, sans-serif;
 }
 
 body {
-    background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+    background: linear-gradient(135deg, #0d2b45 0%, #203c56 50%, #173f5f 100%);
     min-height: 100vh;
     display: flex;
     justify-content: center;
@@ -16,82 +16,111 @@ body {
 
 .login-card {
     background: #ffffff;
-    padding: 40px;
+    padding: 40px 35px;
     border-radius: 12px;
-    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+    box-shadow: 0 16px 36px rgba(0, 0, 0, 0.25);
     width: 100%;
-    max-width: 400px;
+    max-width: 420px;
 }
 
 .login-header {
     text-align: center;
-    margin-bottom: 30px;
+    margin-bottom: 25px;
 }
 
 .login-header h1 {
-    font-size: 24px;
-    color: #1e3c72;
-    margin-bottom: 8px;
+    font-size: 26px;
+    color: #0d2b45;
+    letter-spacing: 1px;
+    margin-bottom: 6px;
 }
 
 .login-header p {
-    color: #666;
+    color: #5a6e7f;
     font-size: 14px;
 }
 
-.form-group {
+.alert {
+    padding: 12px 14px;
+    border-radius: 8px;
+    font-size: 14px;
     margin-bottom: 20px;
+    line-height: 1.4;
+}
+
+.alert-danger {
+    background-color: #fee2e2;
+    color: #991b1b;
+    border: 1px solid #fecaca;
+}
+
+.alert-success {
+    background-color: #dcfce7;
+    color: #166534;
+    border: 1px solid #bbf7d0;
+}
+
+.form-group {
+    margin-bottom: 18px;
 }
 
 .form-group label {
     display: block;
     margin-bottom: 6px;
-    font-size: 14px;
+    font-size: 13px;
     font-weight: 600;
-    color: #333;
+    color: #334155;
 }
 
 .form-group input {
     width: 100%;
     padding: 12px 14px;
-    border: 1px solid #ddd;
+    border: 1px solid #cbd5e1;
     border-radius: 6px;
     font-size: 14px;
+    color: #1e293b;
     outline: none;
-    transition: border-color 0.2s;
+    transition: all 0.2s ease-in-out;
 }
 
 .form-group input:focus {
-    border-color: #2a5298;
+    border-color: #0284c7;
+    box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.15);
 }
 
 .btn-submit {
     width: 100%;
-    padding: 12px;
-    background: #1e3c72;
+    padding: 13px;
+    background: #0284c7;
     border: none;
     border-radius: 6px;
     color: #ffffff;
-    font-size: 16px;
+    font-size: 15px;
     font-weight: 600;
     cursor: pointer;
-    transition: background 0.2s;
+    transition: background 0.2s, transform 0.1s;
+    margin-top: 10px;
 }
 
 .btn-submit:hover {
-    background: #2a5298;
+    background: #0369a1;
+}
+
+.btn-submit:active {
+    transform: scale(0.99);
 }
 
 .login-footer {
-    margin-top: 20px;
+    margin-top: 25px;
+    padding-top: 20px;
+    border-top: 1px solid #e2e8f0;
     text-align: center;
-    font-size: 13px;
-    color: #777;
+    font-size: 12px;
+    color: #64748b;
 }
 
-.login-footer a {
-    color: #1e3c72;
-    text-decoration: none;
-    font-weight: 600;
+.demo-credentials {
+    margin-top: 6px;
+    color: #0369a1;
+    font-size: 12px;
 }
-

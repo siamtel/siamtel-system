@@ -14,40 +14,37 @@
         </div>
 
         <?php if (!empty($_SESSION['error_login'])): ?>
-            <div class="alert alert-danger" style="background-color: #ffeef0; color: #d73a49; border: 1px solid #f97583; padding: 12px; border-radius: 6px; margin-bottom: 20px; font-size: 14px;">
+            <div class="alert alert-danger">
                 <?= htmlspecialchars($_SESSION['error_login']) ?>
             </div>
             <?php unset($_SESSION['error_login']); ?>
         <?php endif; ?>
 
-        <form method="POST" action="/login">
-            <input type="hidden" name="peticion" value="sesion">
+        <?php if (!empty($_SESSION['success_login'])): ?>
+            <div class="alert alert-success">
+                <?= htmlspecialchars($_SESSION['success_login']) ?>
+            </div>
+            <?php unset($_SESSION['success_login']); ?>
+        <?php endif; ?>
 
+        <form method="POST" action="/login">
             <div class="form-group">
-                <label for="CI">Documento de Identidad (Cédula)</label>
-                <div style="display: flex; gap: 8px;">
-                    <select name="particle" id="particle" style="width: 75px; padding: 12px; border: 1px solid #ddd; border-radius: 6px; background: #fff; font-size: 14px;">
-                        <option value="V-">V-</option>
-                        <option value="E-">E-</option>
-                        <option value="J-">J-</option>
-                        <option value="G-">G-</option>
-                    </select>
-                    <input type="text" id="CI" name="CI" placeholder="Ej: 12345678" style="flex: 1; padding: 12px; border: 1px solid #ddd; border-radius: 6px; font-size: 14px;" required>
-                </div>
+                <label for="usuario">Usuario</label>
+                <input type="text" id="usuario" name="usuario" placeholder="Ingrese su usuario" required autofocus autocomplete="username">
             </div>
 
             <div class="form-group">
                 <label for="password">Contraseña</label>
-                <input type="password" id="password" name="password" placeholder="••••••••" required>
+                <input type="password" id="password" name="password" placeholder="••••••••" required autocomplete="current-password">
             </div>
 
             <button type="submit" class="btn-submit">Ingresar al Sistema</button>
         </form>
 
         <div class="login-footer">
-            <p>Sistema Integral de Atención y Gestión</p>
+            <p>Sistema Integral de Atención Médica y Telemática</p>
+            <p class="demo-credentials">Demo: <strong>admin</strong> / <strong>admin123</strong></p>
         </div>
     </div>
 </body>
 </html>
-

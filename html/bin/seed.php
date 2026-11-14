@@ -2,18 +2,16 @@
 
 declare(strict_types=1);
 
-/**
- * ==============================================================================
- * SIAMTEL - Motor de Seeders CLI (Capa de Base de Datos)
- * ==============================================================================
- * Ubicación: html/bin/seed.php
- * Reutiliza: App\Core\Database::getConnection()
- * ==============================================================================
- */
+
 
 $autoload = dirname(__DIR__) . '/vendor/autoload.php';
 if (file_exists($autoload)) {
     require_once $autoload;
+}
+
+$bootstrap = dirname(__DIR__) . '/app/bootstrap.php';
+if (file_exists($bootstrap)) {
+    require_once $bootstrap;
 }
 
 use App\Core\Database;
@@ -62,9 +60,10 @@ if (!$pdo) {
 
 $pdo->setAttribute(PDO::MYSQL_ATTR_MULTI_STATEMENTS, true);
 
-// Tabla de control de seeds
+$systemDb = Database::getSystemDb();
+
 $pdo->exec("
-    CREATE TABLE IF NOT EXISTS `seeds` (
+    CREATE TABLE IF NOT EXISTS `{$systemDb}`.`seeds` (
         `id` INT AUTO_INCREMENT PRIMARY KEY,
         `seed` VARCHAR(255) NOT NULL,
         `applied_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -74,7 +73,7 @@ $pdo->exec("
 
 $force = in_array('--force', $argv ?? [], true);
 
-$stmt = $pdo->query("SELECT seed FROM seeds");
+$stmt = $pdo->query("SELECT seed FROM `{$systemDb}`.`seeds`");
 $applied = $stmt ? $stmt->fetchAll(PDO::FETCH_COLUMN) : [];
 
 $files = scandir($seedsDir) ?: [];
@@ -101,7 +100,7 @@ foreach ($pending as $file) {
 
     $pdo->exec($sql);
 
-    $stmtInsert = $pdo->prepare("INSERT INTO seeds (seed) VALUES (?) ON DUPLICATE KEY UPDATE applied_at = CURRENT_TIMESTAMP");
+    $stmtInsert = $pdo->prepare("INSERT INTO `{$systemDb}`.`seeds` (seed) VALUES (?) ON DUPLICATE KEY UPDATE applied_at = CURRENT_TIMESTAMP");
     $stmtInsert->execute([$file]);
 
     $elapsed = round((microtime(true) - $startTime) * 1000, 2);
@@ -109,4 +108,3 @@ foreach ($pending as $file) {
 }
 
 echo "✔ Todos los seeders se cargaron con éxito.\n";
-

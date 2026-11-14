@@ -13,9 +13,13 @@ services:
       - ./html/:/var/www/html:Z
     environment:
       - DB_HOST=siamtel_db
-      - DB_NAME=${DB_NAME}
+      - DB_PORT=${DB_PORT:-3306}
+      - DB_NAME=${DB_NAME:-system}
+      - DB_SYSTEM_NAME=${DB_SYSTEM_NAME:-system}
+      - DB_SECURITY_NAME=${DB_SECURITY_NAME:-security}
       - DB_USER=${DB_USER}
       - DB_PASSWORD=${DB_PASSWORD}
+      - DB_ROOT_PASSWORD=${DB_ROOT_PASSWORD}
 
   siamtel_db:
     image: mariadb:10.11
@@ -23,15 +27,18 @@ services:
     restart: unless-stopped
     environment:
       MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD}
-      MYSQL_DATABASE: ${DB_NAME}
+      MYSQL_DATABASE: ${DB_SYSTEM_NAME:-system}
       MYSQL_USER: ${DB_USER}
       MYSQL_PASSWORD: ${DB_PASSWORD}
     ports:
       - "${DB_PORT}:3306"
     volumes:
       - siamtel_mariadb_data:/var/lib/mysql
-      - ./html/database/migrations/0001_create_initial_schema.sql:/docker-entrypoint-initdb.d/01_schema.sql:ro
-      - ./html/database/seeds/0001_initial_catalogs.sql:/docker-entrypoint-initdb.d/02_seed.sql:ro
+      - ./html/database/migrations/00_init_databases.sql:/docker-entrypoint-initdb.d/00_init_databases.sql:ro
+      - ./html/database/migrations/system/0001_create_system_schema.sql:/docker-entrypoint-initdb.d/01_system_schema.sql:ro
+      - ./html/database/migrations/security/0001_create_security_schema.sql:/docker-entrypoint-initdb.d/02_security_schema.sql:ro
+      - ./html/database/seeds/0001_initial_catalogs.sql:/docker-entrypoint-initdb.d/03_seed_catalogs.sql:ro
+      - ./html/database/seeds/0002_initial_security_seed.sql:/docker-entrypoint-initdb.d/04_seed_security.sql:ro
 
   siamtel_pma:
     image: phpmyadmin:latest

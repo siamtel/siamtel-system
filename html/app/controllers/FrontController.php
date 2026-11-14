@@ -23,13 +23,13 @@ class FrontController
             $_REQUEST["page"] = $page;
             $_GET["page"] = $page;
 
-            if (in_array($page, ['login', 'crear-cuenta', 'auth'], true)) {
+            if (in_array($page, ['login', 'auth'], true)) {
                 $this->url = 'Auth';
             } elseif ($page === 'logout') {
                 $this->url = 'Auth';
                 $_REQUEST["type"] = 'logout';
-            } elseif (in_array($page, ['recuperar-password', 'verificar-codigo', 'restablecer-password'], true)) {
-                $this->url = 'RecuperacionClave';
+            } elseif (in_array($page, ['dashboard', 'home'], true)) {
+                $this->url = 'Dashboard';
             } else {
                 $this->url = $page;
             }
@@ -46,9 +46,12 @@ class FrontController
     private function getURL(): void
     {
         $controllerName = ucfirst($this->url) . $this->controller;
+        $kebabController = strtolower(preg_replace('/(?<!^)[A-Z]/', '-$0', $this->url)) . '-controller.php';
 
         if (file_exists($this->dir . $controllerName)) {
             require_once $this->dir . $controllerName;
+        } elseif (file_exists($this->dir . $kebabController)) {
+            require_once $this->dir . $kebabController;
         } else {
             $this->show404();
         }

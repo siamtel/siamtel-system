@@ -2,165 +2,94 @@
 
 declare(strict_types=1);
 
-
-use App\Models\Security\Usuario;
-use App\Models\Security\LoginSettings;
-use App\Models\System\Cliente;
+use App\Models\Usuario;
 
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 
-if (isset($_SESSION['user'])) {
-    $rol = strtoupper(trim($_SESSION['user']['rol'] ?? ''));
-    $target = ($rol === 'CLIENTE') ? 'home' : 'dashboard';
-    redirect($target);
-}
-
 $type = $_REQUEST['type'] ?? 'index';
 
-if ($type === 'index') {
-    $siteKey = '';
-    if (class_exists(LoginSettings::class)) {
-        $loginSettings = new LoginSettings();
-        $siteKey = $loginSettings->get_recaptcha_sitekey();
-    }
-
-    $currentPage = $_GET['page'] ?? 'login';
-    $openRegisterSlide = ($currentPage === 'crear-cuenta');
-
-    if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-        $peticion = $_POST['peticion'] ?? 'sesion';
-
-        switch ($peticion) {
-            case 'verificar_cedula':
-                authVerifyCedula();
-                break;
-
-            case 'registrar':
-                authProcessRegister($siteKey);
-                break;
-
-            case 'sesion':
-            default:
-                authProcessLogin($siteKey);
-                break;
-        }
-    }
-
-    view('login', [
-        'titulo'            => 'Iniciar Sesión - SIAMTEL',
-        'siteKey'           => $siteKey,
-        'openRegisterSlide' => $openRegisterSlide,
-    ]);
-
-} elseif ($type === 'logout') {
+if ($type === 'logout') {
     authLogout();
 }
 
-function authProcessLogin(string $siteKey): void
+if (isset($_SESSION['user'])) {
+    redirect('dashboard');
+}
+
+if ($type === 'index') {
+    if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+        authProcessLogin();
+    }
+
+    view('login', [
+        'titulo' => 'Iniciar Sesión - SIAMTEL',
+    ]);
+}
+
+function authProcessLogin(): void
 {
-    $recaptcha = $_POST['g-recaptcha-response'] ?? '';
-    if (!empty($siteKey) && empty($recaptcha)) {
-        $_SESSION['error_login'] = 'Por favor, complete el reCAPTCHA.';
-        redirect('login');
-    }
+    $usuarioInput = trim($_POST['usuario'] ?? $_POST['nombre_usuario'] ?? '');
+    $passwordInput = $_POST['password'] ?? $_POST['clave'] ?? '';
 
-    $particle = $_POST['particle'] ?? 'V-';
-    $ci = trim($_POST['CI'] ?? '');
-    $password = $_POST['password'] ?? '';
-    $cedula = $particle . $ci;
-
-    if (empty($ci) || empty($password)) {
-        $_SESSION['error_login'] = 'Por favor, complete todos los campos requeridos.';
-        redirect('login');
-    }
-
-    if (!class_exists(Usuario::class)) {
-        $_SESSION['error_login'] = 'Módulo de autenticación en desarrollo (sin conexión activa).';
+    if (empty($usuarioInput) || empty($passwordInput)) {
+        $_SESSION['error_login'] = 'Por favor, ingrese su usuario y contraseña.';
         redirect('login');
     }
 
     try {
-        $usuarioModel = new Usuario();
-        $usuarioModel->setCedula($cedula);
-        $usuarioModel->setClave($password, false);
-        $validacion = $usuarioModel->Transaccion(['peticion' => 'sesion']);
+        $usuario = new Usuario();
+        $usuario->setNombreUsuario($usuarioInput);
+        $usuario->setPassword($passwordInput);
 
-        if (!empty($validacion['response']['verificacion'])) {
-            if (isset($validacion['response']['estatus']) && (int)$validacion['response']['estatus'] === 0) {
-                $_SESSION['error_login'] = 'Su cuenta de usuario se encuentra inhabilitada.';
-                redirect('login');
-            }
+        $userData = $usuario->autenticar();
 
-            unset($_SESSION['login_attempts'][$cedula]);
-            $datos = $usuarioModel->Transaccion(['peticion' => 'perfil']);
+        if ($userData !== null) {
+            session_regenerate_id(true);
 
-            if ($datos && isset($datos['response']['datos'])) {
-                $_SESSION['user'] = $datos['response']['datos'];
-                unset($_SESSION['error_login']);
+            $_SESSION['user'] = [
+                'id'             => $userData['id'],
+                'nombre_usuario' => $userData['nombre_usuario'],
+                'empleado_id'    => $userData['empleado_id_referencia'],
+                'ultimo_login'   => $userData['ultimo_login'] ?? date('Y-m-d H:i:s'),
+            ];
 
-                $rol = strtoupper(trim($_SESSION['user']['rol'] ?? ''));
-                $target = ($rol === 'CLIENTE') ? 'home' : 'dashboard';
-                redirect($target);
-            }
+            unset($_SESSION['error_login']);
+            redirect('dashboard');
         }
 
-        $_SESSION['error_login'] = 'Cédula o contraseña incorrectos.';
+        $_SESSION['error_login'] = 'Usuario o contraseña incorrectos.';
     } catch (\Exception $e) {
         error_log('[Auth Error] ' . $e->getMessage());
-        $_SESSION['error_login'] = 'Error interno al procesar el inicio de sesión.';
+        $_SESSION['error_login'] = $e->getMessage();
     }
 
     redirect('login');
-}
-
-function authProcessRegister(string $siteKey): void
-{
-    $clave = $_POST['clave'] ?? '';
-    $rclave = $_POST['rclave'] ?? '';
-
-    if ($clave !== $rclave) {
-        $_SESSION['error_register'] = 'Las contraseñas no coinciden.';
-        redirect('crear-cuenta');
-    }
-
-    if (!class_exists(Cliente::class) || !class_exists(Usuario::class)) {
-        $_SESSION['error_register'] = 'Módulo de registro en desarrollo.';
-        redirect('crear-cuenta');
-    }
-
-    redirect('login');
-}
-
-
-function authVerifyCedula(): void
-{
-    $particle = $_POST['nacionalidad'] ?? 'V-';
-    $ci = trim($_POST['cedula'] ?? '');
-    $cedula = $particle . $ci;
-
-    if (!class_exists(Cliente::class)) {
-        json(['resultado' => 200, 'existe' => false, 'mensaje' => 'Modelo no cargado']);
-    }
-
-    try {
-        $clienteModel = new Cliente();
-        $clienteModel->setCedula($cedula);
-        $resultado = $clienteModel->Transaccion(['peticion' => 'verificar_cedula']);
-        json($resultado['response'] ?? ['resultado' => 500, 'existe' => false]);
-    } catch (\Exception $e) {
-        json(['resultado' => 500, 'existe' => false, 'mensaje' => $e->getMessage()], 500);
-    }
 }
 
 
 function authLogout(): void
 {
-    if (session_status() === PHP_SESSION_ACTIVE) {
-        $_SESSION = [];
-        session_destroy();
+    if (session_status() === PHP_SESSION_NONE) {
+        session_start();
     }
 
+    $_SESSION = [];
+
+    if (ini_get("session.use_cookies")) {
+        $params = session_get_cookie_params();
+        setcookie(
+            session_name(),
+            '',
+            time() - 42000,
+            $params["path"],
+            $params["domain"],
+            $params["secure"],
+            $params["httponly"]
+        );
+    }
+
+    session_destroy();
     redirect('login');
 }

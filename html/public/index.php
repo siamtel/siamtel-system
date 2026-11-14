@@ -21,7 +21,8 @@ error_reporting(E_ALL);
 
 date_default_timezone_set("America/Caracas");
 
-require_once BASE_PATH . '/app/Core/Helpers.php';
+require_once BASE_PATH . '/app/bootstrap.php';
+require_once BASE_PATH . '/app/core/helpers.php';
 
 if (session_status() === PHP_SESSION_NONE) {
     session_start();

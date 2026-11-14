@@ -9,16 +9,18 @@ if (!function_exists('view')) {
         extract($data);
 
         $cleanPath = ltrim($viewPath, '/');
-        $fullPath = BASE_PATH . '/app/Views/' . $cleanPath . '.php';
+        $fullPath = BASE_PATH . '/app/views/' . $cleanPath . '.php';
 
         if (!file_exists($fullPath)) {
-            $altPath = BASE_PATH . '/app/Views/' . basename($cleanPath) . '.php';
+            $altPath = BASE_PATH . '/app/views/' . basename($cleanPath) . '.php';
             if (file_exists($altPath)) {
                 $fullPath = $altPath;
+            } elseif (file_exists(BASE_PATH . '/app/Views/' . $cleanPath . '.php')) {
+                $fullPath = BASE_PATH . '/app/Views/' . $cleanPath . '.php';
             } else {
                 http_response_code(404);
                 echo "<h1>Error 404: Vista no encontrada</h1>";
-                echo "<p>No se pudo localizar el archivo: <code>app/Views/{$cleanPath}.php</code></p>";
+                echo "<p>No se pudo localizar el archivo: <code>app/views/{$cleanPath}.php</code></p>";
                 exit();
             }
         }
@@ -49,6 +51,13 @@ if (!function_exists('json')) {
         header('Content-Type: application/json; charset=utf-8');
         echo json_encode($data);
         exit();
+    }
+}
+
+if (!function_exists('auth_user')) {
+    function auth_user(): ?array
+    {
+        return $_SESSION['user'] ?? null;
     }
 }
 

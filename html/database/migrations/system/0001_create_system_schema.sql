@@ -1,12 +1,16 @@
 -- ==============================================================================
--- SCHEMA MARIADB / MYSQL EN ESPAÑOL (Base de Datos Independiente)
+-- SCHEMA DE SISTEMA / LÓGICA DE NEGOCIO (SYSTEM) - SIAMTEL
 -- Compatible con: MariaDB 10.3+ / MySQL 8.0+
 -- Motor: InnoDB | Charset: utf8mb4_unicode_ci
+-- Convención: Tablas con nombres de negocio puros, sin prefijos.
+-- Relaciones: 'contacto' y 'empleado' hacia 'persona' de 1 a N.
 -- ==============================================================================
 
 SET FOREIGN_KEY_CHECKS = 0;
 SET NAMES utf8mb4;
 
+CREATE DATABASE IF NOT EXISTS `system` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+USE `system`;
 
 -- ------------------------------------------------------------------------------
 -- 1. TABLAS DE CATÁLOGOS BASE
@@ -81,7 +85,7 @@ CREATE TABLE `unidad_organizativa` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ------------------------------------------------------------------------------
--- 2. TABLAS DE PERSONAS Y CONTACTO
+-- 2. TABLAS DE PERSONAS Y CONTACTO (Relación 1 a N)
 -- ------------------------------------------------------------------------------
 
 DROP TABLE IF EXISTS `persona`;
@@ -108,7 +112,7 @@ CREATE TABLE `contacto` (
   `direccion` VARCHAR(255) NULL,
   `telefono` VARCHAR(50) NULL,
   `correo` VARCHAR(150) NULL,
-  UNIQUE KEY `uq_contacto_persona` (`id_persona`),
+  KEY `idx_contacto_persona` (`id_persona`),
   KEY `idx_contacto_persona_telefono` (`id_persona`, `telefono`),
   KEY `idx_contacto_persona_correo` (`id_persona`, `correo`),
   CONSTRAINT `fk_contacto_persona` 
@@ -119,13 +123,14 @@ CREATE TABLE `contacto` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ------------------------------------------------------------------------------
--- 3. TABLAS DE RRHH, EMPLEADOS Y ASIGNACIONES
+-- 3. TABLAS DE RRHH, EMPLEADOS (Relación 1 a N con Persona) Y ASIGNACIONES
 -- ------------------------------------------------------------------------------
 
 DROP TABLE IF EXISTS `empleado`;
 CREATE TABLE `empleado` (
   `id` INT AUTO_INCREMENT PRIMARY KEY,
   `id_persona` INT NOT NULL,
+  `id_cargo` INT NULL,
   `id_tipo_personal` INT NOT NULL,
   `id_tipo_nomina` INT NOT NULL,
   `id_tipo_contrato` INT NOT NULL,
@@ -135,12 +140,18 @@ CREATE TABLE `empleado` (
   `fecha_fin_contrato` DATE NULL,
   `observacion` TEXT NULL,
   `deleted_at` TIMESTAMP NULL DEFAULT NULL COMMENT 'Soft Delete de Filament/Framework',
-  UNIQUE KEY `uq_empleado_persona` (`id_persona`),
+  KEY `idx_empleado_persona` (`id_persona`),
+  KEY `idx_empleado_cargo` (`id_cargo`),
   CONSTRAINT `fk_empleado_persona` 
     FOREIGN KEY (`id_persona`) 
     REFERENCES `persona` (`id`) 
     ON UPDATE CASCADE 
     ON DELETE RESTRICT,
+  CONSTRAINT `fk_empleado_cargo` 
+    FOREIGN KEY (`id_cargo`) 
+    REFERENCES `cargo` (`id`) 
+    ON UPDATE CASCADE 
+    ON DELETE SET NULL,
   CONSTRAINT `fk_empleado_tipo_personal` 
     FOREIGN KEY (`id_tipo_personal`) 
     REFERENCES `tipo_personal` (`id`) 
@@ -220,5 +231,4 @@ CREATE TABLE `historial_laboral` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 SET FOREIGN_KEY_CHECKS = 1;
-
 
